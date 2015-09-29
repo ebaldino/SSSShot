@@ -1,0 +1,9 @@
+name: SSSShot
+main: io.github.ebaldino.sssshot.SSSShot
+version: 0.0.1-SNAPSHOT
+commands:
+   ss:
+      description: Root command for SSSShot.
+      usage: try /ss help
+      permission: <plugin name>.ss
+      permission-message: You don't have <permission>
