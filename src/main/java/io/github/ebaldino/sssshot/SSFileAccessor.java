@@ -16,14 +16,18 @@ public class SSFileAccessor {
 	 private File myFile;
 	 private FileConfiguration fileConfiguration;
 	  
-	 public SSFileAccessor(SSSShot plugin, String fileName) {
-		 if (plugin == null)
-			 throw new IllegalArgumentException("plugin cannot be null");
+	 public SSFileAccessor(SSSShot plugin, String fileName, String dir) {
 		 this.plugin = plugin;
 		 this.fileName = fileName;
+		 if (dir != null) {
+			 this.fileName =  dir + File.separator + fileName;			 
+		 }
+		 
+		 
 		 File dataFolder = plugin.getDataFolder();
 		 if (dataFolder == null)
-			 throw new IllegalStateException();
+			 throw new IllegalStateException();		 
+
 		 this.myFile = new File(dataFolder, fileName);
 	 }
 	  
@@ -56,7 +60,7 @@ public class SSFileAccessor {
 	 }
 	 public void saveDefaultConfig() {
 		 if (!myFile.exists()) {
-			 this.plugin.saveResource(fileName, false);
+			 this.plugin.saveResource(fileName, false);				 
 		 }
 	 }
 

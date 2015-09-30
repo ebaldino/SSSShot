@@ -12,12 +12,22 @@ public class SSSShot extends JavaPlugin {
 	@Override
     public void onEnable() {
 		
-		// Save the default folder and files if they don't exist		
-		sssceneFile = new SSFileAccessor(this, "SStemplate.json");
-		sssceneFile.saveDefaultConfig(); 
+		// Save the default folders and files if they don't exist		
+		sssceneFile = new SSFileAccessor(this, "SStemplate.json", null);
+		sssceneFile.saveDefaultConfig(); 			
+		sssceneFile = new SSFileAccessor(this, "readme.txt", "scenes");
+		sssceneFile.saveDefaultConfig(); 		
+		sssceneFile = new SSFileAccessor(this, "chunky-core-1.3.5.jar", "lib");
+		sssceneFile.saveDefaultConfig();
+		sssceneFile = new SSFileAccessor(this, "JOCL-0.1.7.jar", "lib");
+		sssceneFile.saveDefaultConfig();
+		sssceneFile = new SSFileAccessor(this, "commons-math3-3.2.jar", "lib");
+		sssceneFile.saveDefaultConfig();
+		sssceneFile = new SSFileAccessor(this, "ppj99-1.0.1.jar", "lib");
+		sssceneFile.saveDefaultConfig();
+	
 		
 		// Set an executor for each command in plugin.yml
-		// This will throw a NullPointerException if you don't have the command defined in your plugin.yml file!
         cmdExec = new SSCommandExecutor(this);
 		this.getCommand("ss").setExecutor(cmdExec);
 		

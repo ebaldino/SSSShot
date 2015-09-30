@@ -14,24 +14,35 @@
               </configuration>
           </plugin>
       </plugins>
-	   <resources>
-	   		<resource>
-		   		<targetPath>lib</targetPath>
-		   		<filtering>false</filtering>
-		   		<directory>${basedir}/lib</directory>
-		   		<includes>
-		   			<include>*.jar</include>
-		   		</includes>
-	   		</resource>   		
-	   		<resource>
-		   		<targetPath>resources</targetPath>
-		   		<filtering>false</filtering>
-		   		<directory>${basedir}/resources</directory>
-		   		<includes>
-		   			<include>*.jar</include>
-		   		</includes>
-	   		</resource>
-	   </resources>      
+	  <resources>
+          <resource>
+              <targetPath>lib</targetPath>
+              <filtering>true</filtering>
+              <directory>${basedir}/src/main/resources/lib</directory>
+              <includes>
+                  <include>*.jar</include>
+                  <include>*.*</include>                  
+              </includes>
+          </resource> 	
+          <resource>
+              <targetPath>scenes</targetPath>
+              <filtering>true</filtering>
+              <directory>${basedir}/src/main/resources/scenes</directory>
+              <includes>
+                  <include>*.txt</include>
+                  <include>*.*</include>                  
+              </includes>
+          </resource>             
+          <resource>				
+              <filtering>true</filtering>				
+              <directory>${basedir}/src/main/resources</directory>
+              <includes>
+                  <include>*.yml</include>
+                  <include>*.json</include>
+                  <include>*.*</include>					
+              </includes>
+          </resource>	     		
+	  </resources>      
    </build>
    <repositories>
        <repository>

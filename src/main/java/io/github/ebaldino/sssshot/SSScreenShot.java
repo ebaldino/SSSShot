@@ -25,9 +25,8 @@ public class SSScreenShot {
 	private String playeruuid;
 	private String sep;
 	private String basepath; 
-	private String templatepath;
-	private String scenepath;
-	private String jsonfilepath;
+	private String templatefile;	
+	private String jsonfile;
 	private Integer sheight;
 	private Integer swidth;
 	
@@ -39,9 +38,8 @@ public class SSScreenShot {
 		this.playeruuid = player.getUniqueId().toString();
 		this.sep = File.separator;
 		this.basepath = plugin.getDataFolder().getAbsolutePath().toString(); 
-		this.templatepath = basepath +  sep + "SStemplate.json";
-		this.scenepath = basepath +  sep + "scenes";
-		this.jsonfilepath = scenepath + sep + playeruuid + ".json";
+		this.templatefile = basepath +  sep + "SStemplate.json";	
+		this.jsonfile = basepath +  sep + "scenes" + sep + playeruuid + ".json";
 		//worldpath = Bukkit.getServer().getWorld("world").getWorldFolder().getPath();
 		//basepath = worldpath + File.separator + ".." + File.separator + "plugins" + File.separator + "SSSShot";
 		switch (resolution.toUpperCase()) {
@@ -66,9 +64,9 @@ public class SSScreenShot {
 				break;
 			}			
 		}
-		
 	}
 
+// =============================================================================================================================	
 	public String chunkList(String type) {
 		// This will make a list of all the chunks needed to assemble the screenshot
 		// The list is formatted for use in the scene file
@@ -97,7 +95,7 @@ public class SSScreenShot {
 		Integer maxchunkZ = world.getChunkAt(maxX, maxZ).getZ();
 		
 		
-		//GET ONLY THE CHUNKS IN FRONT OF THE PLAYER!!!!
+		//TO DO: ONLY NEED TO GET THE CHUNKS IN FRONT OF THE PLAYER!!!!
 		
 		// assemble chunk list according to requested type:
 		switch (type) {
@@ -133,7 +131,9 @@ public class SSScreenShot {
 		//Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "chlist = " + chlist);
 		return chlist;
 	}
-	
+
+
+// =============================================================================================================================	
 	@SuppressWarnings("unchecked")
 	public void updateSceneTemplate() throws IOException, ParseException {
 		// This will read the scene file template and update it so it's ready to be copied to a new user scene file
@@ -142,7 +142,7 @@ public class SSScreenShot {
 		
 	//	try {
 			// get the contents of the template file into a json object
-			FileReader jfilein = new FileReader(templatepath);
+			FileReader jfilein = new FileReader(templatefile);
 			Object jobj = jparser.parse(jfilein);
 			JSONObject jsonobj = (JSONObject) jobj;
 			jfilein.close();
@@ -181,7 +181,7 @@ public class SSScreenShot {
 			cameraorient.put("yaw", camyaw);			
 			jsonobj.put("camera", camera);
 			
-			//skylight
+			// the skylight
 			JSONObject sky = (JSONObject) jsonobj.get("sky");
 			sky.put("skyLight", light);
 			jsonobj.put("sky", sky);
@@ -199,7 +199,7 @@ public class SSScreenShot {
 			jsonobj.put("pathTrace", false);
 
 			// write out the new file
-			FileWriter jfileout = new FileWriter(jsonfilepath);
+			FileWriter jfileout = new FileWriter(jsonfile);
 			//try{
 				jfileout.write(JsonFormatter.format(jsonobj));
 				jfileout.flush();
@@ -213,21 +213,26 @@ public class SSScreenShot {
 	//	}
 
 		//delete the temporary files in the scene directory:
+		String scenepath = basepath +  sep + "scenes";
 		Path deletepath; 
 		deletepath = FileSystems.getDefault().getPath(scenepath, playeruuid +  ".dump");
 		deletefile(deletepath);
 		deletepath = FileSystems.getDefault().getPath(scenepath, playeruuid +  ".octree");
 		deletefile(deletepath);
-		
 	}	
-	
+
+// =============================================================================================================================	
 	public void renderscene() {
 		// call the external renderer
 		
 		//basepath = "." + sep + basepath;
 		//String javapath = System.getProperty("java.home") + sep;
-		String rendercmd = "-Xmx1024m -classpath " + basepath + sep + "chunky-core-1.3.5.jar;" + basepath + sep + "commons-math3-3.2.jar;" + basepath + sep + "JOCL-0.1.7.jar;" + basepath + sep + "ppj99-1.0.1.jar se.llbit.chunky.main.Chunky -render ";
-		rendercmd = rendercmd + playeruuid + " -scene-dir " + basepath + sep + "scenes";
+		String libpath = basepath +  sep + "lib" + sep;	
+		String scenepath = basepath +  sep + "scenes";
+		
+		String rendercmd = "-Xmx1024m -classpath " + libpath + "chunky-core-1.3.5.jar;" + libpath + "commons-math3-3.2.jar;" + libpath + "JOCL-0.1.7.jar;" + libpath + "ppj99-1.0.1.jar se.llbit.chunky.main.Chunky -render ";
+		rendercmd = rendercmd + playeruuid + " -scene-dir " + scenepath;		
+		
 		try {
 			runProc(rendercmd, basepath + sep + "tempfile");
 		} catch (Exception e) {
@@ -235,16 +240,20 @@ public class SSScreenShot {
 		}			
 	}
 	
+// =============================================================================================================================	
 	public void runProc(String cmd, String directory) throws InterruptedException,IOException {
+		//String javapath = System.getProperty("java.home") + sep;
 		//ProcessBuilder pb = new ProcessBuilder(cmd);
 		//pb.directory(new File(directory));
 		//pb.start();
 		StringBuffer output = new StringBuffer();
 		Process proc;
 		String cmdoutput = "";
+
 		try {
 			String os = System.getProperty("os.name").toLowerCase();
-			if (os.contains("win")) {			
+			if (os.contains("win")) {		
+				Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Running windows command" + cmd);
 				proc = Runtime.getRuntime().exec("cmd /c start /min /separate /low java " + cmd);
 				proc.waitFor();
 			} else {
@@ -269,6 +278,7 @@ public class SSScreenShot {
 		
 	}
 	
+// =============================================================================================================================	
 	public void deletefile(Path deletepath) {
 		try {
 			Files.deleteIfExists(deletepath);
