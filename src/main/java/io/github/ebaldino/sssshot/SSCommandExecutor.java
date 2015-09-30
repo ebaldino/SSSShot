@@ -43,6 +43,7 @@ public class SSCommandExecutor implements CommandExecutor {
 						try {
 							rc = this.clickCmd(player);
 						} catch (IOException e) {
+						    	e.printStackTrace();
 							rc = false;
 						} catch (ParseException e) {
 							// TODO Auto-generated catch block
