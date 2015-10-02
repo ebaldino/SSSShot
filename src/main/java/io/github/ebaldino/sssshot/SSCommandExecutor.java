@@ -26,7 +26,7 @@ public class SSCommandExecutor implements CommandExecutor {
 			if (args.length == 0 || args[0].toLowerCase().equals("help")) { 
 				// "ss" with no args: list syntax for each and every command
 				rc = true;
-				sender.sendMessage("/ss click");
+				sender.sendMessage("/ss click [DVD|HD|FULLHD]");
 
 			} else {
 
@@ -34,25 +34,34 @@ public class SSCommandExecutor implements CommandExecutor {
 				// ADMIN commands are grouped first...
 				// ========================================================================
 				switch (args[0].toLowerCase()) {
-				case "click": { 
-					if (!(sender instanceof Player)) {
-						rc = false;
-						sender.sendMessage("You must be a player!");
-					} else {
-						Player player = (Player) sender;
-						try {
-							rc = this.clickCmd(player);
-						} catch (IOException e) {
+					case "click": { 
+						if (!(sender instanceof Player)) {
 							rc = false;
-						} catch (ParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							sender.sendMessage("You must be a player!");
+						} else {
+							
+							String resolution;
+							if ("dvd hd fullhd".contains(args[1])) {
+								resolution = args[1].toUpperCase();
+							} else {
+								resolution = "DVD";
+							}
+							
+							Player player = (Player) sender;
+							try {
+								rc = this.clickCmd(player, resolution);
+							} catch (IOException e) {
+								e.printStackTrace();
+								rc = false;
+							} catch (ParseException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							if (!rc) sender.sendMessage("click command failed.");	
+							break;
 						}
-						if (!rc) sender.sendMessage("click command failed.");	
-						break;
 					}
-				}
-				default: 
+					default: 
 					break;
 				}					
 			}		
@@ -61,9 +70,9 @@ public class SSCommandExecutor implements CommandExecutor {
 	}
 
 // =============================================================================================================================
-	public Boolean clickCmd(Player player) throws IOException, ParseException {
+	public Boolean clickCmd(Player player, String res) throws IOException, ParseException {
 		
-		SSScreenShot sshot = new SSScreenShot(plugin, player, "DVD");
+		SSScreenShot sshot = new SSScreenShot(plugin, player, "res");
 		sshot.updateSceneTemplate();
 		sshot.renderscene();
 		
