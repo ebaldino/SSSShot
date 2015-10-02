@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -198,7 +199,7 @@ public class SSScreenShot {
 	jsonobj.put("name", playeruuid);
 	jsonobj.put("height", sheight);
 	jsonobj.put("width", swidth);
-	jsonobj.put("sppTarget", 10);
+	jsonobj.put("sppTarget", 50);
 	jsonobj.put("pathTrace", false);
 
 	// write out the new file
@@ -235,7 +236,8 @@ public class SSScreenShot {
 
 	String rendercmd = "-Xmx1024m -classpath " + libpath + "chunky-core-1.3.5.jar;" + libpath + "commons-math3-3.2.jar;" + libpath + "JOCL-0.1.7.jar;" + libpath + "ppj99-1.0.1.jar se.llbit.chunky.main.Chunky -render ";
 	rendercmd = rendercmd + playeruuid + " -scene-dir " + scenepath;		
-
+	rendercmd = rendercmd + " -texture " + libpath + "ChromaHills.zip";
+	plugin.getLogger().info("DEBUG: " + rendercmd);
 	try {
 	    runProc(rendercmd, basepath + sep + "tempfile");
 	} catch (Exception e) {
@@ -267,29 +269,33 @@ public class SSScreenShot {
 		params.addAll(Arrays.asList(cmd.split(" ")));
 		Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Running command " + params);
 		final ProcessBuilder pb = new ProcessBuilder(params);
-
+		pb.redirectOutput(Redirect.PIPE);
 		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
 
 		    @Override
 		    public void run() {
-			StringBuffer output = new StringBuffer();
+			//StringBuffer output = new StringBuffer();
 			String cmdoutput = "";
 			Process p;
 			try {
 			    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Starting render");
 			    p = pb.start();
-			    int exitCode = p.waitFor();
-			    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: exit code = " + exitCode);
+			    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Started");
 			    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			    while ((cmdoutput = reader.readLine())!= null) {
-				output.append(cmdoutput + "\n");
-			    }				
+				Bukkit.getConsoleSender().sendMessage(cmdoutput);
+			    }
+			    int exitCode = p.waitFor();
+			    if (exitCode == 0) {
+				Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Finished Rendering");
+			    } else {
+				Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Abnormal exit code = " + exitCode);
+			    }
 			} catch (Exception e) {
 			    e.printStackTrace();
 			    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed");
 			}
-			Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Command output: " + cmdoutput);
 		    }});
 
 	    }

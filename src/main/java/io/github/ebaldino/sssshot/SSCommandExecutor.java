@@ -64,7 +64,7 @@ public class SSCommandExecutor implements CommandExecutor {
 // =============================================================================================================================
 	public Boolean clickCmd(Player player) throws IOException, ParseException {
 		
-		SSScreenShot sshot = new SSScreenShot(plugin, player, "DVD");
+		SSScreenShot sshot = new SSScreenShot(plugin, player, "FULLHD");
 		sshot.updateSceneTemplate();
 		sshot.renderscene();
 		
