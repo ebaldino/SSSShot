@@ -43,6 +43,7 @@ public class SSCommandExecutor implements CommandExecutor {
 						try {
 							rc = this.clickCmd(player);
 						} catch (IOException e) {
+						    	e.printStackTrace();
 							rc = false;
 						} catch (ParseException e) {
 							// TODO Auto-generated catch block
@@ -63,7 +64,7 @@ public class SSCommandExecutor implements CommandExecutor {
 // =============================================================================================================================
 	public Boolean clickCmd(Player player) throws IOException, ParseException {
 		
-		SSScreenShot sshot = new SSScreenShot(plugin, player, "DVD");
+		SSScreenShot sshot = new SSScreenShot(plugin, player, "FULLHD");
 		sshot.updateSceneTemplate();
 		sshot.renderscene();
 		
