@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,12 +33,15 @@ public class SSScreenShot {
     private String jsonfile;
     private Integer sheight;
     private Integer swidth;
+    private Integer sppTarget;
+    private String texture;
 
 
-    public SSScreenShot(SSSShot plugin, Player player, String resolution) {
+    public SSScreenShot(SSSShot plugin, Player player, String resolution, Integer sppTarget, String texture) {
 		this.plugin = plugin;
 		this.player = player;
-	
+		this.sppTarget = sppTarget;
+		this.texture = texture;
 		this.playeruuid = player.getUniqueId().toString();
 		this.sep = File.separator;
 		this.basepath = plugin.getDataFolder().getAbsolutePath().toString().replace(" ", "\\ ");
@@ -45,6 +49,7 @@ public class SSScreenShot {
 		this.jsonfile = basepath +  sep + "scenes" + sep + playeruuid + ".json";
 		//worldpath = Bukkit.getServer().getWorld("world").getWorldFolder().getPath();
 		//basepath = worldpath + File.separator + ".." + File.separator + "plugins" + File.separator + "SSSShot";
+		
 		switch (resolution.toUpperCase()) {
 			case "DVD": {
 				sheight = 480;
@@ -159,8 +164,9 @@ public class SSScreenShot {
 			Double camy = player.getEyeLocation().getY();
 			Double camz = player.getLocation().getZ();
 			Double camroll = 0.0;
-			Float campitch = (float) (player.getEyeLocation().getPitch() * -0.01745329 + 1.570796);  // pitch adusted by to fall between 0 and PI - use y = ax + b with a= 0.01745329 and b= 1.570796 
-			Float camyaw = (float) ((player.getEyeLocation().getYaw() +90) * (-6.28 / 360)); // yaw adusted by adding 90 and multiplying by 6/360  			
+ 
+			Float campitch = (float) (Math.toRadians(player.getEyeLocation().getPitch()-90)); // pitch range needs to be adjusted from (90,-90) to (0,-pi) (down,up) - so take pitch, subtract 90 and convert to radians  			  			
+			Float camyaw = (float) (Math.toRadians(player.getEyeLocation().getYaw() -90) * -1); // yaw adusted by subtracting 90, converting to radians and multiplying by -1 (in chunky, positive yaw is counterclockwise, negative yaw is clockwise)
 		
 			// the world path
 			String worldpath = Bukkit.getServer().getWorld(player.getWorld().getName()).getWorldFolder().getAbsolutePath();
@@ -198,7 +204,7 @@ public class SSScreenShot {
 			jsonobj.put("name", playeruuid);
 			jsonobj.put("height", sheight);
 			jsonobj.put("width", swidth);
-			jsonobj.put("sppTarget", 10);
+			jsonobj.put("sppTarget", sppTarget);
 			jsonobj.put("pathTrace", false);
 		
 			// write out the new file
@@ -232,9 +238,21 @@ public class SSScreenShot {
 		//String javapath = System.getProperty("java.home") + sep;
 		String libpath = basepath +  sep + "lib" + sep;	
 		String scenepath = basepath +  sep + "scenes";
+		String texpath = basepath + sep + "textures";
 	
-		String rendercmd = "-Xmx1024m -classpath " + libpath + "chunky-core-1.3.5.jar;" + libpath + "commons-math3-3.2.jar;" + libpath + "JOCL-0.1.7.jar;" + libpath + "ppj99-1.0.1.jar se.llbit.chunky.main.Chunky -render ";
-		rendercmd = rendercmd + playeruuid + " -scene-dir " + scenepath;		
+		String rendercmd = "-Xmx1024m -classpath " 
+						 + libpath + "chunky-core-1.3.5.jar;" 
+						 + libpath + "commons-math3-3.2.jar;" 
+						 + libpath + "JOCL-0.1.7.jar;" 
+						 + libpath + "ppj99-1.0.1.jar se.llbit.chunky.main.Chunky" 
+						 + " -render ";
+		
+		rendercmd = rendercmd + playeruuid + " -scene-dir " + scenepath;	
+		
+		if (texture != null) {
+			rendercmd = rendercmd + " -texture " + texpath + texture;
+		}			
+			
 	
 		try {
 		    runProc(rendercmd, basepath + sep + "tempfile");
@@ -251,49 +269,71 @@ public class SSScreenShot {
 		try {
 		    String os = System.getProperty("os.name").toLowerCase();
 		    if (os.contains("win")) {		
-				//proc = Runtime.getRuntime().exec("cmd /c start /min /separate /low java " + cmd);
-				//proc.waitFor();
+				//proc = Runtime.getRuntime().exec("cmd /c start /separate /low java " + cmd); proc.waitFor();
 		    	cmd = "/c start /min /separate /low java " + cmd;
 				params.add("cmd");
 				params.addAll(Arrays.asList(cmd.split(" ")));
 				
-		    } else {
-				// Unix uses : for classpath delimiters
-				cmd = cmd.replace(";", ":");				
-				params.add("/usr/bin/java");
+		    } else {				
+				cmd = cmd.replace(";", ":"); 	// Unix uses : for classpath delimiters				
+				params.add("/usr/bin/java"); 	// we should check for the existence of java in usr/bin, or get this to work: params.add(System.getProperty("java.home") + sep + "java");
 				params.addAll(Arrays.asList(cmd.split(" ")));
 		    }
 
-			Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Running command " + params);
+			//Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Running command " + params);
 			final ProcessBuilder pb = new ProcessBuilder(params);
+			pb.redirectErrorStream(true);
+			pb.redirectOutput(Redirect.PIPE);
+			
 		    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-	
 			    @Override
 			    public void run() {
 				StringBuffer output = new StringBuffer();
 				String cmdoutput = "";
-				Process p;
+				Process p = null;
 				try {
-				    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Starting render");
-				    p = pb.start();
-				    int exitCode = p.waitFor();
-				    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: exit code = " + exitCode);
-				    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	
-				    while ((cmdoutput = reader.readLine())!= null) {
-					output.append(cmdoutput + "\n");
-				    }				
-				} catch (Exception e) {
-				    e.printStackTrace();
-				    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed");
-				}
-				Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Command output: " + cmdoutput);
-			    }});		
+					    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Starting render");
+					    p = pb.start();
+					    
+					    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+					    while ((cmdoutput = reader.readLine())!= null) {
+					    	output.append(cmdoutput + "\n");
+					    }
+					    				   							  
+					} catch (Exception e) {
+					    e.printStackTrace();
+					    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (1)");
+					    
+					} finally {
+						try {
+							int exitCode = p.waitFor();
+							if (exitCode == 0) {
+								Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Finished Rendering, exit code = 0");
+								player.sendMessage("Rendering complete");
+							} else {
+								Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Abnormal exit code = " + exitCode);
+								player.sendMessage("Rendering failed. Exit code = " + exitCode);
+							}	
+
+							//clean up...
+							p.getInputStream().close();
+							p.getOutputStream().close();
+							p.getErrorStream().close(); 
+
+						} catch (Exception e) {
+						    e.printStackTrace();
+						    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (2)");
+						}
+				
+					}
+				//Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Command output: " + output);
+			    }
+		    });		
 	    
 	
 		} catch (Exception e) {
 		    e.printStackTrace();
-		    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed");
+		    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (3)");
 		}		
 
     }

@@ -1,0 +1,1 @@
+Put all resource packs in here, in their original zip files. 

@@ -17,6 +17,8 @@ public class SSSShot extends JavaPlugin {
 		sssceneFile.saveDefaultConfig(); 			
 		sssceneFile = new SSFileAccessor(this, "readme.txt", "scenes");
 		sssceneFile.saveDefaultConfig(); 		
+		sssceneFile = new SSFileAccessor(this, "readme.txt", "textures");
+		sssceneFile.saveDefaultConfig(); 			
 		sssceneFile = new SSFileAccessor(this, "chunky-core-1.3.5.jar", "lib");
 		sssceneFile.saveDefaultConfig();
 		sssceneFile = new SSFileAccessor(this, "JOCL-0.1.7.jar", "lib");

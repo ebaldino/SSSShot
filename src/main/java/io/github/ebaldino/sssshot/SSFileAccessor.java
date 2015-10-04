@@ -50,7 +50,7 @@ public class SSFileAccessor {
 	 }
 	  
 	 public void saveConfig() {
-		 if (fileConfiguration != null && myFile != null) {
+		 if (fileConfiguration != null && myFile != null && !myFile.exists()) {
 			 try {
 				 getConfig().save(myFile);
 			 } catch (IOException ex) {

@@ -35,6 +35,14 @@
 				</includes>
 			</resource>
 			<resource>
+				<targetPath>textures</targetPath>
+				<filtering>true</filtering>
+				<directory>${basedir}/src/main/resources/textures</directory>
+				<includes>
+					<include>*.txt</include>
+				</includes>
+			</resource>			
+			<resource>
 				<filtering>true</filtering>
 				<directory>${basedir}/src/main/resources</directory>
 				<includes>
