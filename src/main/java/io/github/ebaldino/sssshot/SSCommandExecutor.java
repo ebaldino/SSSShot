@@ -2,6 +2,13 @@ package io.github.ebaldino.sssshot;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,9 +18,11 @@ import org.json.simple.parser.ParseException;
 public class SSCommandExecutor implements CommandExecutor {
 	
 	private final SSSShot plugin;
+	private HashMap<String, String[]> filesToProcess; 
 	
 	public SSCommandExecutor(SSSShot plugin) {
 		this.plugin = plugin; 
+		this.filesToProcess = plugin.getFileToProcess();
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -103,7 +112,7 @@ public class SSCommandExecutor implements CommandExecutor {
 								texFile = null;
 							}
 
-							
+							// Run the actual "click" command
 							Player player = (Player) sender;
 							try {
 								rc = this.clickCmd(player, resolution, sppTarget, texFile);
@@ -129,9 +138,11 @@ public class SSCommandExecutor implements CommandExecutor {
 // =============================================================================================================================
 	public Boolean clickCmd(Player player, String res, Integer spp, String texture) throws IOException, ParseException {
 		
+		// Generate Screenshot
 		SSScreenShot sshot = new SSScreenShot(plugin, player, res, spp, texture);
 		sshot.updateSceneTemplate();
 		sshot.renderscene();
+		
 		
 		return true;
 	}	
@@ -159,6 +170,59 @@ public class SSCommandExecutor implements CommandExecutor {
 		File texfile = new File(filepath);
 		return texfile.exists();		
 	}		
+	
+
+// =============================================================================================================================	
+    public void checkForFile() {
+    	// This will run a timed process to check (every  10 seconds) for the presence of .png files in the Scenes directory and decide what to do with them
+    	
+		Integer repeatseconds = 10;
+		
+    	new Timer().schedule(new TimerTask() {
+    		   		
+		    @Override
+		    public void run() {
+		    	
+		    	Boolean procOK;
+		    	String[] hashvalue;
+		    	
+	    		 Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Running scheduled task.");
+
+		    	for (String fullfname : filesToProcess.keySet()) {
+		    		
+		    		hashvalue = filesToProcess.get(fullfname);
+		    		procOK = false;
+		    		
+		    		Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Processing files hash: " + fullfname + " -- " + hashvalue[0]);
+		    		
+		    		switch(hashvalue[0]) {
+			    		case ("sendToGD"): {
+			    			SSGoogleDrive gd = new SSGoogleDrive();
+			    			try {
+								procOK = gd.sendFileToGD(fullfname);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}		    			
+			    			break;
+			    		}
+			    		default:
+			    			break;
+		    		}		    		
+
+		    		if (procOK) {
+		    			// Processed the file OK, remove it from the hashmap
+			    		filesToProcess.remove(fullfname);
+			    		Player player = Bukkit.getServer().getPlayer((UUID.fromString(hashvalue[1])));
+			    		player.sendMessage("Your screenshot was sent to Google Drive");
+			    					    		
+			    	}		    	
+		    	}		    	
+
+		    } // run()		    
+    	}, 0, repeatseconds * 1000 ); // end Timer() - } ms_to_delay, ms_til_repeat);	
+
+    }    	
 	
 	
 }

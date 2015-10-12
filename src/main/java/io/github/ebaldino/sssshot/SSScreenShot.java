@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -35,6 +36,7 @@ public class SSScreenShot {
     private Integer swidth;
     private Integer sppTarget;
     private String texture;
+	private HashMap<String, String[]> filesToProcess; 
 
 
     public SSScreenShot(SSSShot plugin, Player player, String resolution, Integer sppTarget, String texture) {
@@ -42,6 +44,7 @@ public class SSScreenShot {
 		this.player = player;
 		this.sppTarget = sppTarget;
 		this.texture = texture;
+		this.filesToProcess = plugin.getFileToProcess();
 		this.playeruuid = player.getUniqueId().toString();
 		this.sep = File.separator;
 		this.basepath = plugin.getDataFolder().getAbsolutePath().toString().replace(" ", "\\ ");
@@ -255,14 +258,16 @@ public class SSScreenShot {
 			
 	
 		try {
-		    runProc(rendercmd, basepath + sep + "tempfile");
+		    runProc(rendercmd, basepath + sep + playeruuid + ".png");
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}			
     }
 
     // =============================================================================================================================	
-    public void runProc(String cmd, String directory) throws InterruptedException,IOException {
+    public void runProc(String cmd, final String fullfname) throws InterruptedException,IOException {
+    	
+    	
 		//String javapath = System.getProperty("java.home") + sep;
 		List<String> params = new ArrayList<String>();
 	
@@ -288,45 +293,48 @@ public class SSScreenShot {
 		    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
 			    @Override
 			    public void run() {
-				StringBuffer output = new StringBuffer();
-				String cmdoutput = "";
-				Process p = null;
-				try {
-					    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Starting render");
-					    p = pb.start();
-					    
-					    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-					    while ((cmdoutput = reader.readLine())!= null) {
-					    	output.append(cmdoutput + "\n");
-					    }
-					    				   							  
-					} catch (Exception e) {
-					    e.printStackTrace();
-					    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (1)");
-					    
-					} finally {
-						try {
-							int exitCode = p.waitFor();
-							if (exitCode == 0) {
-								Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Finished Rendering, exit code = 0");
-								player.sendMessage("Rendering complete");
-							} else {
-								Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Abnormal exit code = " + exitCode);
-								player.sendMessage("Rendering failed. Exit code = " + exitCode);
-							}	
-
-							//clean up...
-							p.getInputStream().close();
-							p.getOutputStream().close();
-							p.getErrorStream().close(); 
-
+					StringBuffer output = new StringBuffer();
+					String cmdoutput = "";
+					Process p = null;
+					try {
+						    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Starting render");
+						    player.sendMessage("Rendering... (this may take a while, we'll let you know.)");
+						    p = pb.start();
+						    
+						    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						    while ((cmdoutput = reader.readLine())!= null) {
+						    	output.append(cmdoutput + "\n");
+						    }
+						    				   							  
 						} catch (Exception e) {
 						    e.printStackTrace();
-						    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (2)");
+						    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (1)");
+						    
+						} finally {
+							try {
+								int exitCode = p.waitFor();
+								if (exitCode == 0) {
+									Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Finished Rendering, exit code = 0");
+									player.sendMessage("Rendering complete");
+								} else {
+									Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Abnormal exit code = " + exitCode);
+									player.sendMessage("Rendering failed. Exit code = " + exitCode);
+								}	
+	
+								//clean up...
+								p.getInputStream().close();
+								p.getOutputStream().close();
+								p.getErrorStream().close(); 
+	
+							} catch (Exception e) {
+							    e.printStackTrace();
+							    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (2)");
+							}
+					
 						}
-				
-					}
-				//Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Command output: " + output);
+					// AT THE END OF THE RUN, INSERT THE FILE NAME INTO A HASHMAP; AN ASYNC TASK WILL PERIODICALLY CHECK THE HASHMAP AND UPLOAD THE FILE, CLEARING THE HASH
+					String[] hashvalue = {"sendToGD", playeruuid};
+					filesToProcess.put(fullfname, hashvalue);
 			    }
 		    });		
 	    
@@ -334,7 +342,8 @@ public class SSScreenShot {
 		} catch (Exception e) {
 		    e.printStackTrace();
 		    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "SSSShot: Render failed (3)");
-		}		
+		}
+		
 
     }
 
@@ -347,4 +356,7 @@ public class SSScreenShot {
 	}
 
     }
+    
+
+    
 }

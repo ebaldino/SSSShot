@@ -4,6 +4,9 @@
 	<groupId>io.github.ebaldino</groupId>
 	<artifactId>SSSShot</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<defaultGoal>clean package install</defaultGoal>
 		<finalName>ssshot</finalName>
@@ -65,6 +68,31 @@
 			<version>1.8-R0.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>provided</scope>
+		</dependency>
+	    <dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>1.20.0</version>
+	    </dependency>   	    
+	    <dependency>
+		      <groupId>com.google.apis</groupId>
+		      <artifactId>google-api-services-drive</artifactId>
+		      <version>v2-rev188-1.20.0</version>
+	    </dependency>	    			  
+		<dependency>
+			 <groupId>com.google.http-client</groupId>
+			 <artifactId>google-http-client</artifactId>
+			 <version>1.20.0</version>
+		</dependency>			
+		<dependency>
+			 <groupId>com.google.http-client</groupId>
+			 <artifactId>google-http-client-jackson2</artifactId>
+			 <version>1.20.0</version>
+		</dependency>		
+		<dependency>
+			<groupId>com.google.oauth-client</groupId>
+			<artifactId>google-oauth-client</artifactId>
+			<version>1.20.0</version>
 		</dependency>
 	</dependencies>
 </project>
